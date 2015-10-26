@@ -47,7 +47,7 @@ class NRFSecure extends NRFComms {
     return yield super.request(this._packageMessage(buf));
   }
 
-  * send(buf) {
+  send(buf) {
     super.send(this._packageMessage(buf));
   }
 }
