@@ -10,3 +10,5 @@ This would provide reliability and packetization for long(er) messages, bypassin
 - Implement easy to use security layer (HMAC/encryption) on top of the NRF module.
 - Include implementation to interface with Arduino.
 - Implement garage door monitoring/control system.
+
+These goals have not yet been realized, but are a work in progress.
