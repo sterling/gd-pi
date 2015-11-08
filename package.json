@@ -6,9 +6,9 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "sterlingw.me",
+  "author": "sterling",
   "dependencies": {
     "co": "^4.6.0",
-    "nrf": "sterling/node-nrf"
+    "nrf": "1.0.x"
   }
 }
