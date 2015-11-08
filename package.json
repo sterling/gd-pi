@@ -9,6 +9,6 @@
   "author": "sterlingw.me",
   "dependencies": {
     "co": "^4.6.0",
-    "nrf": "sterlinghw/node-nrf"
+    "nrf": "sterling/node-nrf"
   }
 }
