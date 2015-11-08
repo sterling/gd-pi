@@ -1,5 +1,6 @@
 'use strict';
 
+let assert = require('assert');
 let co = require('co');
 
 let NRFSecure = require('./nrf-secure');
@@ -8,7 +9,11 @@ let GarageDoor = require('./garage-door-ctl');
 function *main() {
   let door = new GarageDoor();
 
-  let secret = process.argv[2].split(',').map(v => {
+  let secretArg = process.argv[2];
+
+  assert(secretArg, 'Missing secret key');
+
+  let secret = secretArg.split(',').map(v => {
     return parseInt(v, 16);
   });
 
