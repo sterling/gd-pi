@@ -15,7 +15,7 @@ const uint8_t DOORTRANS = 2;
 RF24 radio(7, 8);
 
 byte addr[][6] = {"1Node", "2Node"};
-const uint8_t secretKey[32] = {};
+const uint8_t secretKey[32] = {0xd8, 0x33, 0x04, 0xb7, 0x81, 0x42, 0x74, 0x34, 0xa7, 0x77, 0x25, 0xfa, 0x15, 0xe1, 0xea, 0x0b, 0x97, 0xb3, 0x29, 0xfa, 0xae, 0x4d, 0x64, 0xf5, 0x4a, 0x32, 0x53, 0xb2, 0x6e, 0x29, 0xea, 0xf8};
 
 const int maxPayloadLen = 32;
 char payload[maxPayloadLen + 1];
@@ -38,7 +38,6 @@ void setup() {
   long wat = 0x6eUL << 16;
   wat += 0x04 << 8;
   wat += 0xdb;
-  printf("WAT %ld\n", wat);
   printf("=======================================\n");
 
   pinMode(doorControlOutput, OUTPUT);
@@ -94,11 +93,6 @@ void loop() {
         nonce += tmp << 8 * i;
       }
 
-      printf("Nonce HEX: %02X %02X %02X %02X\n", nonceBuf[0], nonceBuf[1], nonceBuf[2], nonceBuf[3]); 
-      printf("Nonce LONG: %ld\n", nonce);
-
-      printf("HMAC: %i\n", validHmac(hmac, nonce, message, hmacLen));
-
       if (validHmac(hmac, nonce, message, hmacLen)) {
         switch (message[0]) {
           case 0x01:
@@ -108,6 +102,8 @@ void loop() {
             toggleDoor();
             break;
         } 
+      } else {
+        printf("Invalid HMAC\n");
       }
     }
     
@@ -150,19 +146,16 @@ void sendDoorState() {
 }
 
 bool validHmac(char *hmac, long nonce, char *message, uint8_t len) {
-  printf("VALID NONCE: %i\n", isValidNonce(nonce));
   if (!isValidNonce(nonce)) {
     return false;
   }
 
   uint8_t nonceBufLen = sizeof(long) + 1;
   char nonceBuf[nonceBufLen];
-  printf("NONCE BUF: ");
+  
   for (uint8_t i = 0; i < sizeof(long); i++) {
     nonceBuf[i] = (nonce >> 8 * i) & 0xff;
-    printf("%02X ", nonceBuf[i]);
   }
-  printf("\n");
 
   nonceBuf[nonceBufLen - 1] = 0;
   
