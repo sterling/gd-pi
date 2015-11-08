@@ -9,6 +9,6 @@
   "author": "sterling",
   "dependencies": {
     "co": "^4.6.0",
-    "nrf": "1.0.x"
+    "nrf": "^0.8.3"
   }
 }
