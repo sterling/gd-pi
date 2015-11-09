@@ -12,20 +12,20 @@ class NRFSecure extends NRFComms {
   }
 
   * _getNonce() {
-    console.log('get nonce')
     let response = yield this._unsignedRequest(new Buffer([0xff]));
 
     let type = response.readUIntLE(0, 1);
     let len = response.readUIntLE(1, 1);
-    let payload = response.readUIntLE(2, len);
+    let payload = response.slice(2, 2 + len);
 
     assert(type == 0xff, 'BADNONCE');
 
     return payload;
   }
 
-  _createHmac(buf) {
+  _createHmac(nonce, buf) {
     let hmac = crypto.createHmac('sha256', this.key);
+    hmac.write(nonce);
     hmac.end(buf);
     return hmac.read();
   }
@@ -34,21 +34,23 @@ class NRFSecure extends NRFComms {
     return yield super.request(buf);
   }
 
-  _packageMessage(buf) {
+  * _packageMessage(buf) {
     if (buf.length > 3) {
       throw new Error('Maximum message length (3b) exceeded.');
     }
 
-    console.log('packaging', buf)
-    return Buffer.concat([new Buffer([0xaa]), this._createHmac(buf).slice(0, 28), buf]);
+    let nonce = yield this._getNonce();
+    let hmac = this._createHmac(nonce, buf).slice(0, 24);
+
+    return Buffer.concat([new Buffer([0xaa]), hmac, nonce, buf]);
   }
 
   * request(buf) {
-    return yield super.request(this._packageMessage(buf));
+    return yield super.request(yield this._packageMessage(buf));
   }
 
-  send(buf) {
-    super.send(this._packageMessage(buf));
+  * send(buf) {
+    super.send(yield this._packageMessage(buf));
   }
 }
 

@@ -26,14 +26,14 @@ class GarageDoor {
     try {
       //console.log('nonce', yield this.comms._getNonce());
       //console.log('door status', yield this.getDoorStatus());
-      console.log('toggling door'); this.openDoor();
+      console.log('toggling door'); yield this.openDoor();
     } catch (e) {
       console.error(e);
     }
   }
 
-  openDoor() {
-    this.comms.send(new Buffer([0x02]));
+  * openDoor() {
+    yield this.comms.send(new Buffer([0x02]));
   }
 
   closeDoor() {
