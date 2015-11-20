@@ -47,7 +47,7 @@ class NRFComms {
   }
 
   _write(buf) {
-    console.log('writing', buf)
+    //console.log('writing', buf)
     let write = new Buffer(buf);
     write.reverse();
     this.tx.write(write);
@@ -109,7 +109,7 @@ class NRFComms {
         this.tx = this.nrf.openPipe('tx', this.txAddr);
         this.rx = this.nrf.openPipe('rx', this.rxAddr);
 
-        this.nrf.printDetails();
+        //this.nrf.printDetails();
 
         this.rx.on('data', this._rxData.bind(this));
         this.tx.on('error', this._txError.bind(this));

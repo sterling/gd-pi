@@ -1,6 +1,7 @@
 'use strict';
 
 let co = require('co');
+let Events = require('events');
 
 let doorStates = {
   0: 'closed',
@@ -8,9 +9,11 @@ let doorStates = {
   2: 'transitioning'
 };
 
-class GarageDoor {
+class GarageDoor extends Events {
   constructor() {
+    super();
     this.comms = null;
+    this._currentState = null;
   }
 
   /**
@@ -18,17 +21,23 @@ class GarageDoor {
    * @param {NRFSecure} comms
    */
   * connect(comms) {
+    console.log('connecting...');
     this.comms = comms;
     yield this.comms.setup();
+    console.log('connected');
   }
 
   * monitor() {
-    try {
-      //console.log('nonce', yield this.comms._getNonce());
-      //console.log('door status', yield this.getDoorStatus());
-      console.log('toggling door'); yield this.openDoor();
-    } catch (e) {
-      console.error(e);
+    while (true) {
+      yield new Promise(resolve => {
+        setTimeout(() => {
+          resolve();
+        }, 2000);
+      });
+
+      try {
+        this.updateDoorState(yield this._getDoorState());
+      } catch (e) {}
     }
   }
 
@@ -36,16 +45,27 @@ class GarageDoor {
     yield this.comms.send(new Buffer([0x02]));
   }
 
-  closeDoor() {
-
+  * closeDoor() {
+    yield this.comms.send(new Buffer([0x02]));
   }
 
-  * getDoorStatus() {
-    let response = yield this.comms.request(new Buffer([0x01]));
-    let state = response.readUIntLE(0, 1);
-    console.log('door state', response, state);
-    let status = doorStates[state];
+  getDoorStatus() {
+    let status = doorStates[this._currentState];
     return status ? status : 'unknown';
+  }
+
+  updateDoorState(newState) {
+    if (this._currentState !== null && this._currentState != newState) {
+
+    }
+
+    this._currentState = newState;
+    console.log(this.getDoorStatus());
+  }
+
+  * _getDoorState() {
+    let response = yield this.comms.request(new Buffer([0x01]));
+    return response.readUIntLE(0, 1);
   }
 }
 

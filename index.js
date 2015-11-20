@@ -2,6 +2,7 @@
 
 let assert = require('assert');
 let co = require('co');
+var koa = require('koa');
 
 let NRFSecure = require('./nrf-secure');
 let GarageDoor = require('./garage-door-ctl');
@@ -25,16 +26,19 @@ function *main() {
     rx: 0x65646f4e32
   }, new Buffer(secret)));
 
+  var app = koa();
+  app.use(function*() {
+    if (this.request.path == '/garage/open') {
+      this.body = 'opening\n';
+      yield door.openDoor();
+    } else if (this.request.path == '/garage/close') {
+      this.body = 'closing\n';
+      yield door.openDoor();
+    }
+  });
+  app.listen(3000);
 
-  while (true) {
-    yield new Promise(resolve => {
-      setTimeout(() => {
-        resolve();
-      }, 2000);
-    });
-
-    yield door.monitor();
-  }
+  yield door.monitor();
 }
 
 co(main).catch(err => {
