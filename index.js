@@ -2,7 +2,8 @@
 
 let assert = require('assert');
 let co = require('co');
-var koa = require('koa');
+var app = require('koa')();
+var router = require('koa-router')({prefix: '/gdpi'});
 
 let NRFSecure = require('./nrf-secure');
 let GarageDoor = require('./garage-door-ctl');
@@ -26,16 +27,26 @@ function *main() {
     rx: 0x65646f4e32
   }, new Buffer(secret)));
 
-  var app = koa();
-  app.use(function*() {
-    if (this.request.path == '/garage/open') {
-      this.body = 'opening\n';
-      yield door.openDoor();
-    } else if (this.request.path == '/garage/close') {
-      this.body = 'closing\n';
-      yield door.openDoor();
-    }
+
+  router.get('/open', function*() {
+    this.body = 'opening\n';
+    yield door.openDoor();
   });
+
+  router.get('/close', function*() {
+    this.body = 'closing\n';
+    yield door.closeDoor();
+  });
+
+  router.get('/state', function*() {
+    this.body = door.getDoorStatus();
+  });
+
+  router.get('/', function*() {
+    this.body = 'gdpi';
+  });
+
+  app.use(router.routes());
   app.listen(3000);
 
   yield door.monitor();
