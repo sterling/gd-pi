@@ -32,7 +32,7 @@ class NRFComms {
   }
 
   _txError(e) {
-    console.warn('.', e);
+    //console.warn('.', e);
     this._clearResponseListener();
     this._ontxerror && this._ontxerror(e);
   }

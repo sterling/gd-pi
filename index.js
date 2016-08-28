@@ -3,6 +3,8 @@
 let assert = require('assert');
 let co = require('co');
 let app = require('koa')();
+let koaLogger = require('koa-logger');
+let koaBody = require('koa-bodyparser');
 
 let routes = require('./routes');
 let NRFSecure = require('./nrf-secure');
@@ -27,6 +29,8 @@ function *main() {
     rx: 0x65646f4e32
   }, new Buffer(secret)));
 
+  app.use(koaLogger());
+  app.use(koaBody());
   app.use(routes(door));
   app.listen(3000);
 
