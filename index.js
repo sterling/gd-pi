@@ -27,7 +27,7 @@ function *main() {
     rx: 0x65646f4e32
   }, new Buffer(secret)));
 
-  app.use(routes);
+  app.use(routes(door));
   app.listen(3000);
 
   yield door.monitor();

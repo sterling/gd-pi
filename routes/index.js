@@ -1,21 +1,27 @@
-var router = require('koa-router')({prefix: '/gdpi'});
+var router = require('koa-router')({prefix: '/gdpi/v1'});
 
-router.get('/open', function*() {
-  this.body = 'opening\n';
-  yield door.openDoor();
-});
+module.exports = function(door) {
+  router.get('/open', function*() {
+    this.body = 'opening\n';
+    yield door.openDoor();
+  });
 
-router.get('/close', function*() {
-  this.body = 'closing\n';
-  yield door.closeDoor();
-});
+  router.get('/close', function*() {
+    this.body = 'closing\n';
+    yield door.closeDoor();
+  });
 
-router.get('/state', function*() {
-  this.body = door.getDoorStatus();
-});
+  router.get('/door', function*() {
+    this.body = door.getDoorStatus().toUpperCase();
+  });
 
-router.get('/', function*() {
-  this.body = 'gdpi';
-});
+  router.post('/door', function*() {
+    console.log(this.request.body);
+  });
 
-module.exports = router.routes();
+  router.get('/', function*() {
+    this.body = 'gdpi';
+  });
+
+  return router.routes();
+}
