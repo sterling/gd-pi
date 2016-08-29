@@ -90,7 +90,7 @@ class NRFComms {
    * @returns {Buffer}
    */
   * request(buf) {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 15; i++) {
       try {
         return yield this._writeWait(buf);
       } catch (e) {

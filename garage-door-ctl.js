@@ -3,10 +3,14 @@
 let co = require('co');
 let Events = require('events');
 
+const CLOSED = 0;
+const OPEN = 1;
+const TRANS = 2;
+
 let doorStates = {
-  0: 'closed',
-  1: 'open',
-  2: 'transitioning'
+  [CLOSED]: 'closed',
+  [OPEN]: 'open',
+  [TRANS]: 'transitioning'
 };
 
 class GarageDoor extends Events {
@@ -14,6 +18,8 @@ class GarageDoor extends Events {
     super();
     this.comms = null;
     this._currentState = null;
+    this._pendingRequest = null;
+    this._pendingStart = null;
   }
 
   /**
@@ -37,16 +43,105 @@ class GarageDoor extends Events {
 
       try {
         this.updateDoorState(yield this._getDoorState());
+        yield this.doPendingRequest();
       } catch (e) {}
     }
   }
 
+  clearPendingRequest() {
+    this._pendingRequest = null;
+    this._pendingStart = null;
+  }
+
   * openDoor() {
-    yield this.comms.send(new Buffer([0x02]));
+    if (this.isOpen()) {
+      // nothing to do
+      this.clearPendingRequest();
+    } else if (this.isClosed()) {
+      this.clearPendingRequest();
+
+      let success = yield this._toggleDoor();
+      if (!success) {
+        this.setPendingRequest(OPEN);
+      }
+    } else if (this.isTransitioning() || this.isUnknown()) {
+      this.setPendingRequest(OPEN);
+    }
   }
 
   * closeDoor() {
-    yield this.comms.send(new Buffer([0x02]));
+    if (this.isClosed()) {
+      // nothing to do
+      this.clearPendingRequest();
+    } else if (this.isOpen()) {
+      this.clearPendingRequest();
+
+      let success = yield this._toggleDoor();
+      if (!success) {
+        this.setPendingRequest(CLOSED);
+      }
+    } else if (this.isTransitioning() || this.isUnknown()) {
+      this.setPendingRequest(CLOSED);
+    }
+  }
+
+  * _toggleDoor() {
+    this._currentState = TRANS;
+    try {
+      yield this.comms.send(new Buffer([0x02]));
+      return true;
+    } catch (e) {
+      console.error('Failed to toggle door', e);
+    }
+
+    return false;
+  }
+
+  * doPendingRequest() {
+    if (this._pendingRequest !== null) {
+      let timeSinceRequest = Date.now() - this._pendingStart;
+
+      if (timeSinceRequest >= 20000 && this.isTransitioning()) {
+        // has been pending for a while so the door must be stopped in between.
+        if (yield this._toggleDoor()) {
+          this._pendingStart = Date.now();
+        }
+      } else {
+        switch (this._pendingRequest) {
+          case OPEN:
+            yield this.openDoor();
+            break;
+          case CLOSED:
+            yield this.closeDoor();
+            break;
+          default:
+        }
+      }
+    }
+  }
+
+  setPendingRequest(requestedState) {
+    this._pendingRequest = requestedState;
+
+    if (this._pendingStart === null) {
+      this._pendingStart = Date.now();
+    }
+  }
+
+  isOpen() {
+    return this._currentState == OPEN;
+  }
+
+  isClosed() {
+   return this._currentState == CLOSED;
+  }
+
+  isTransitioning() {
+    return this._currentState == TRANS;
+  }
+
+  isUnknown() {
+    return doorStates[this._currentState] === undefined;
   }
 
   getDoorStatus() {
@@ -55,12 +150,7 @@ class GarageDoor extends Events {
   }
 
   updateDoorState(newState) {
-    if (this._currentState !== null && this._currentState != newState) {
-
-    }
-
     this._currentState = newState;
-    console.log(this.getDoorStatus());
   }
 
   * _getDoorState() {

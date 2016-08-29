@@ -30,7 +30,9 @@ function *main() {
   }, new Buffer(secret)));
 
   app.use(koaLogger());
-  app.use(koaBody());
+  app.use(koaBody({
+    enableTypes: ['text']
+  }));
   app.use(routes(door));
   app.listen(3000);
 
