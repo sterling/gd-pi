@@ -33,11 +33,6 @@ void setup() {
   randomSeed(analogRead(0)); // unconnected pin
   Serial.begin(9600);
   printf_begin();
-  // db 04 6e 00 -> 7210203
-  long wat = 0x6eUL << 16;
-  wat += 0x04 << 8;
-  wat += 0xdb;
-  printf("=======================================\n");
 
   pinMode(doorControlOutput, OUTPUT);
 
