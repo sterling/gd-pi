@@ -3,7 +3,7 @@
 let assert = require('assert');
 let co = require('co');
 let app = require('koa')();
-let koaLogger = require('koa-logger');
+let koaLogger = require('koa-accesslog');
 let koaBody = require('koa-bodyparser');
 
 let routes = require('./routes');
